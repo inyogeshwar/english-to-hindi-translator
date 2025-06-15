@@ -5,12 +5,46 @@ class EnglishToHindiTranslator {
         this.bindEvents();
         this.loadHistory();
         this.translations = this.getOfflineTranslations();
-        this.apiEndpoint = 'https://api.mymemory.translated.net/get';
-        this.libreEndpoint = 'https://libretranslate.de/translate';
+        
+        // Multiple API endpoints for better reliability
+        this.apiEndpoints = [
+            {
+                name: 'MyMemory',
+                url: 'https://api.mymemory.translated.net/get',
+                method: 'GET',
+                formatUrl: (word) => `${this.apiEndpoints[0].url}?q=${encodeURIComponent(word)}&langpair=en|hi`,
+                parseResponse: (data) => data.responseStatus === 200 ? data.responseData.translatedText : null
+            },
+            {
+                name: 'LibreTranslate',
+                url: 'https://libretranslate.de/translate',
+                method: 'POST',
+                body: (word) => JSON.stringify({
+                    q: word,
+                    source: 'en',
+                    target: 'hi',
+                    format: 'text'
+                }),
+                parseResponse: (data) => data.translatedText || null
+            },
+            {
+                name: 'LibreTranslateAlt',
+                url: 'https://translate.argosopentech.com/translate',
+                method: 'POST',
+                body: (word) => JSON.stringify({
+                    q: word,
+                    source: 'en',
+                    target: 'hi'
+                }),
+                parseResponse: (data) => data.translatedText || null
+            }
+        ];
+        
         this.requestCount = this.loadRequestCount();
         this.maxDailyRequests = 900;
         this.initializeRippleEffect();
         this.initializeAnimations();
+        this.currentApiIndex = 0;
     }
 
     initializeElements() {
@@ -30,14 +64,12 @@ class EnglishToHindiTranslator {
     }
 
     initializeTheme() {
-        // Load saved theme preference
         const savedTheme = localStorage.getItem('theme') || 'light';
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const theme = savedTheme === 'auto' ? (prefersDark ? 'dark' : 'light') : savedTheme;
         
         this.setTheme(theme);
         
-        // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
             if (localStorage.getItem('theme') === 'auto') {
                 this.setTheme(e.matches ? 'dark' : 'light');
@@ -49,8 +81,6 @@ class EnglishToHindiTranslator {
         document.documentElement.setAttribute('data-theme', theme);
         this.themeSwitch.checked = theme === 'dark';
         localStorage.setItem('theme', theme);
-        
-        // Update theme toggle animation
         this.animateThemeTransition();
     }
 
@@ -62,7 +92,6 @@ class EnglishToHindiTranslator {
     }
 
     bindEvents() {
-        // Translation events
         this.translateBtn.addEventListener('click', () => this.translateWord());
         this.englishInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -70,16 +99,13 @@ class EnglishToHindiTranslator {
             }
         });
         
-        // Audio and history events
         this.speakBtn.addEventListener('click', () => this.speakHindi());
         this.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
         
-        // Theme toggle event
         this.themeSwitch.addEventListener('change', (e) => {
             this.setTheme(e.target.checked ? 'dark' : 'light');
         });
 
-        // Enhanced input animations
         this.englishInput.addEventListener('focus', () => {
             this.englishInput.style.transform = 'scale(1.02)';
             this.addInputGlow();
@@ -90,12 +116,10 @@ class EnglishToHindiTranslator {
             this.removeInputGlow();
         });
 
-        // Input typing animation
         this.englishInput.addEventListener('input', () => {
             this.animateInputTyping();
         });
 
-        // Popular word chips with enhanced animations
         document.querySelectorAll('.word-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 const word = chip.getAttribute('data-word');
@@ -106,15 +130,12 @@ class EnglishToHindiTranslator {
             });
         });
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + D for dark mode toggle
             if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
                 e.preventDefault();
                 this.themeSwitch.click();
             }
             
-            // Escape to clear input
             if (e.key === 'Escape' && this.englishInput.value) {
                 this.englishInput.value = '';
                 this.englishInput.focus();
@@ -148,7 +169,6 @@ class EnglishToHindiTranslator {
     }
 
     initializeAnimations() {
-        // Intersection Observer for scroll animations
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -163,7 +183,6 @@ class EnglishToHindiTranslator {
             });
         }, observerOptions);
 
-        // Observe all main sections
         document.querySelectorAll('.translator-card, .popular-words, .history-section').forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(20px)';
@@ -212,88 +231,102 @@ class EnglishToHindiTranslator {
             'night': { hindi: 'रात', pronunciation: 'रात', romanized: 'raat' },
             'day': { hindi: 'दिन', pronunciation: 'दिन', romanized: 'din' },
             'light': { hindi: 'प्रकाश', pronunciation: 'प्रकाश', romanized: 'prakash' },
-            'dark': { hindi: 'अँधेरा', pronunciation: 'अँधेरा', romanized: 'andhera' }
+            'dark': { hindi: 'अँधेरा', pronunciation: 'अँधेरा', romanized: 'andhera' },
+            'person': { hindi: 'व्यक्ति', pronunciation: 'व्यक्ति', romanized: 'vyakti' },
+            'man': { hindi: 'आदमी', pronunciation: 'आदमी', romanized: 'aadmi' },
+            'woman': { hindi: 'औरत', pronunciation: 'औरत', romanized: 'aurat' },
+            'child': { hindi: 'बच्चा', pronunciation: 'बच्चा', romanized: 'baccha' },
+            'boy': { hindi: 'लड़का', pronunciation: 'लड़का', romanized: 'ladka' },
+            'girl': { hindi: 'लड़की', pronunciation: 'लड़की', romanized: 'ladki' },
+            'teacher': { hindi: 'शिक्षक', pronunciation: 'शिक्षक', romanized: 'shikshak' },
+            'student': { hindi: 'छात्र', pronunciation: 'छात्र', romanized: 'chhaatra' },
+            'doctor': { hindi: 'डॉक्टर', pronunciation: 'डॉक्टर', romanized: 'doctor' },
+            'cat': { hindi: 'बिल्ली', pronunciation: 'बिल्ली', romanized: 'billi' },
+            'dog': { hindi: 'कुत्ता', pronunciation: 'कुत्ता', romanized: 'kutta' },
+            'bird': { hindi: 'पक्षी', pronunciation: 'पक्षी', romanized: 'pakshi' },
+            'fish': { hindi: 'मछली', pronunciation: 'मछली', romanized: 'machhli' },
+            'red': { hindi: 'लाल', pronunciation: 'लाल', romanized: 'laal' },
+            'blue': { hindi: 'नीला', pronunciation: 'नीला', romanized: 'neela' },
+            'green': { hindi: 'हरा', pronunciation: 'हरा', romanized: 'hara' },
+            'white': { hindi: 'सफ़ेद', pronunciation: 'सफ़ेद', romanized: 'safed' },
+            'black': { hindi: 'काला', pronunciation: 'काला', romanized: 'kaala' },
+            'yellow': { hindi: 'पीला', pronunciation: 'पीला', romanized: 'peela' }
         };
     }
 
-    async getOnlineTranslation(word) {
-        try {
-            if (this.requestCount >= this.maxDailyRequests) {
-                console.log('Daily request limit reached, trying LibreTranslate');
-                return await this.getLibreTranslation(word);
-            }
+    async tryApiTranslation(word, apiIndex = 0) {
+        if (apiIndex >= this.apiEndpoints.length) {
+            return null;
+        }
 
-            const response = await fetch(
-                `${this.apiEndpoint}?q=${encodeURIComponent(word)}&langpair=en|hi`,
-                {
+        const api = this.apiEndpoints[apiIndex];
+        console.log(`Trying ${api.name} API for word: ${word}`);
+
+        try {
+            let response;
+            
+            if (api.method === 'GET') {
+                response = await fetch(api.formatUrl(word), {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'User-Agent': 'English-Hindi-Translator/2.1'
                     }
-                }
-            );
-            
+                });
+            } else {
+                response = await fetch(api.url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'User-Agent': 'English-Hindi-Translator/2.1'
+                    },
+                    body: api.body(word)
+                });
+            }
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`${api.name} HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
-            if (data.responseStatus === 200 && data.responseData) {
-                const hindiText = data.responseData.translatedText;
-                this.requestCount++;
-                this.saveRequestCount();
-                
+            const translatedText = api.parseResponse(data);
+
+            if (translatedText && translatedText.trim()) {
+                console.log(`✅ Success with ${api.name}:`, translatedText);
                 return {
-                    hindi: hindiText,
-                    pronunciation: hindiText,
-                    romanized: this.generateRomanized(hindiText)
+                    hindi: translatedText,
+                    pronunciation: translatedText,
+                    romanized: this.generateRomanized(translatedText),
+                    source: api.name
                 };
+            } else {
+                throw new Error(`${api.name} returned empty translation`);
             }
-            
-            return null;
+
         } catch (error) {
-            console.error('MyMemory API error:', error);
-            return await this.getLibreTranslation(word);
+            console.warn(`❌ ${api.name} failed:`, error.message);
+            // Try next API
+            return await this.tryApiTranslation(word, apiIndex + 1);
         }
     }
 
-    async getLibreTranslation(word) {
-        try {
-            const response = await fetch(this.libreEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    q: word,
-                    source: 'en',
-                    target: 'hi',
-                    format: 'text'
-                })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`LibreTranslate HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.translatedText) {
-                return {
-                    hindi: data.translatedText,
-                    pronunciation: data.translatedText,
-                    romanized: this.generateRomanized(data.translatedText)
-                };
-            }
-            
-            return null;
-        } catch (error) {
-            console.error('LibreTranslate error:', error);
-            return null;
+    async getOnlineTranslation(word) {
+        // Check rate limits for MyMemory
+        if (this.requestCount >= this.maxDailyRequests) {
+            console.log('MyMemory rate limit reached, skipping to other APIs');
+            return await this.tryApiTranslation(word, 1); // Skip MyMemory
         }
+
+        const translation = await this.tryApiTranslation(word, 0);
+        
+        if (translation && translation.source === 'MyMemory') {
+            this.requestCount++;
+            this.saveRequestCount();
+        }
+
+        return translation;
     }
 
     generateRomanized(hindiText) {
@@ -355,13 +388,15 @@ class EnglishToHindiTranslator {
         try {
             let translation;
             
+            // First try offline translations
             if (this.translations[word]) {
                 translation = this.translations[word];
-                console.log('Using offline translation for:', word);
+                translation.source = 'Offline';
+                console.log('✅ Using offline translation for:', word);
                 // Add slight delay to show loading animation
                 await new Promise(resolve => setTimeout(resolve, 500));
             } else {
-                console.log('Fetching online translation for:', word);
+                console.log('🌐 Fetching online translation for:', word);
                 translation = await this.getOnlineTranslation(word);
             }
 
@@ -369,12 +404,12 @@ class EnglishToHindiTranslator {
                 this.displayTranslation(word, translation);
                 this.saveToHistory(word, translation);
             } else {
-                this.showError('Translation not found. Please check your internet connection and try again.');
+                this.showError(`Unable to translate "${word}". This could be due to:\n• Network connectivity issues\n• API rate limits\n• Word not found in translation databases\n\nTry again in a moment or try a different word.`);
                 this.animateErrorShake();
             }
         } catch (error) {
             console.error('Translation error:', error);
-            this.showError('Translation failed. Please try again.');
+            this.showError('Translation failed due to a technical error. Please try again.');
             this.animateErrorShake();
         }
     }
@@ -390,7 +425,11 @@ class EnglishToHindiTranslator {
         this.resultsSection.style.display = 'block';
         this.resultsSection.scrollIntoView({ behavior: 'smooth' });
         
-        // Enhanced success animation
+        // Show success notification with source
+        if (translation.source) {
+            this.showNotification(`Translation successful via ${translation.source}!`, 'success');
+        }
+        
         this.animateResultsAppear();
     }
 
@@ -405,7 +444,6 @@ class EnglishToHindiTranslator {
             this.resultsSection.style.transform = 'translateY(0) scale(1)';
         }, 50);
 
-        // Animate each result card individually
         const cards = this.resultsSection.querySelectorAll('.result-card');
         cards.forEach((card, index) => {
             card.style.opacity = '0';
@@ -483,6 +521,8 @@ class EnglishToHindiTranslator {
             opacity: 0;
             transform: translateX(100%);
             transition: all 0.3s ease;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         `;
         
         switch(type) {
@@ -510,7 +550,7 @@ class EnglishToHindiTranslator {
             notification.style.opacity = '0';
             notification.style.transform = 'translateX(100%)';
             setTimeout(() => notification.remove(), 300);
-        }, 3000);
+        }, 4000);
     }
 
     saveToHistory(englishWord, translation) {
@@ -522,6 +562,7 @@ class EnglishToHindiTranslator {
             english: englishWord,
             hindi: translation.hindi,
             romanized: translation.romanized,
+            source: translation.source || 'Unknown',
             timestamp: new Date().toISOString()
         });
         
@@ -544,7 +585,9 @@ class EnglishToHindiTranslator {
         
         this.historyList.innerHTML = history.map((item, index) => `
             <div class="history-item" data-word="${item.english}" style="animation-delay: ${index * 50}ms">
-                <div class="history-item-english">${item.english.charAt(0).toUpperCase() + item.english.slice(1)}</div>
+                <div class="history-item-english">${item.english.charAt(0).toUpperCase() + item.english.slice(1)}
+                    <span class="history-source">(${item.source || 'N/A'})</span>
+                </div>
                 <div class="history-item-hindi">${item.hindi} (${item.romanized})</div>
             </div>
         `).join('');
@@ -610,14 +653,13 @@ class EnglishToHindiTranslator {
         this.hideAll();
         this.loading.style.display = 'block';
         
-        // Enhanced loading animation
         const spinner = this.loading.querySelector('.spinner');
         spinner.style.animation = 'spin 1s linear infinite, pulse 2s ease-in-out infinite';
     }
 
     showError(message) {
         this.hideAll();
-        this.errorMessage.querySelector('p').textContent = message;
+        this.errorMessage.querySelector('p').innerHTML = message.replace(/\n/g, '<br>');
         this.errorMessage.style.display = 'block';
     }
 
@@ -660,15 +702,14 @@ class EnglishToHindiTranslator {
 document.addEventListener('DOMContentLoaded', () => {
     const translator = new EnglishToHindiTranslator();
     
-    // Enhanced logging with theme info
-    console.log('🌐 English to Hindi Translator v2.1 Loaded');
-    console.log('✨ Features: Night mode, offline translations, API integration, speech synthesis');
-    console.log('🔧 APIs: MyMemory (1000/day) + LibreTranslate (unlimited)');
+    console.log('🌐 English to Hindi Translator v2.1 Fixed - Live since: 2025-06-15 22:31:25 UTC');
+    console.log('✨ Features: Enhanced API fallback, 45+ offline words, dark mode');
+    console.log('🔧 APIs: MyMemory → LibreTranslate → ArgoTranslate (fallback chain)');
     console.log('🌙 Theme: Auto-switching dark/light mode support');
-    console.log('📱 Responsive design with modern UI animations');
+    console.log('📱 Responsive design with enhanced error handling');
     console.log('⌨️ Keyboard shortcuts: Ctrl+D (theme toggle), Escape (clear)');
     
-    // Service worker registration for PWA features
+    // Service worker registration
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch(console.log);
     }
@@ -682,12 +723,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Add global error handler
+// Global error handlers
 window.addEventListener('error', (e) => {
     console.error('Global error:', e.error);
 });
 
-// Add unhandled promise rejection handler
 window.addEventListener('unhandledrejection', (e) => {
     console.error('Unhandled promise rejection:', e.reason);
 });
