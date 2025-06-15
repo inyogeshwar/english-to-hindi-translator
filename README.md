@@ -1,3 +1,7 @@
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=for-the-badge&logo=github-pages)](https://inyogeshwar.github.io/english-to-hindi-translator/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+[![Version](https://img.shields.io/badge/Version-2.1-orange?style=for-the-badge)](https://github.com/inyogeshwar/english-to-hindi-translator/releases)
+[![Stars](https://img.shields.io/github/stars/inyogeshwar/english-to-hindi-translator?style=for-the-badge)](https://github.com/inyogeshwar/english-to-hindi-translator/stargazers)
 # English to Hindi Translator Website with Night Mode
 
 A beautiful and interactive web application that translates English words to Hindi, displays their pronunciation in Devanagari script, and provides romanized pronunciation guides with free API integration and stunning dark/light theme support.
