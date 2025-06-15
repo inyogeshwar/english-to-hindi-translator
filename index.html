@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English to Hindi Translator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="title-section">
+                    <h1>🌐 English to Hindi Translator</h1>
+                    <p>Translate English words to Hindi with pronunciation guide</p>
+                </div>
+                <div class="theme-toggle">
+                    <input type="checkbox" id="theme-switch" class="theme-switch">
+                    <label for="theme-switch" class="theme-label">
+                        <span class="theme-icon sun">☀️</span>
+                        <span class="theme-icon moon">🌙</span>
+                        <div class="toggle-slider"></div>
+                    </label>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="translator-card">
+                <div class="input-section">
+                    <label for="englishInput">Enter English Word:</label>
+                    <input type="text" id="englishInput" placeholder="Type an English word..." autocomplete="off">
+                    <button id="translateBtn">Translate</button>
+                </div>
+
+                <div class="results-section" id="resultsSection" style="display: none;">
+                    <div class="result-card">
+                        <h3>English Word</h3>
+                        <p id="englishWord" class="english-text"></p>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Hindi Translation</h3>
+                        <p id="hindiTranslation" class="hindi-text"></p>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Pronunciation (Devanagari)</h3>
+                        <p id="hindiPronunciation" class="hindi-text pronunciation"></p>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>Romanized Pronunciation</h3>
+                        <p id="romanizedPronunciation" class="romanized-text"></p>
+                    </div>
+
+                    <button id="speakBtn" class="speak-btn">🔊 Listen to Pronunciation</button>
+                </div>
+
+                <div class="loading" id="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Translating...</p>
+                </div>
+
+                <div class="error-message" id="errorMessage" style="display: none;">
+                    <p>Sorry, translation failed. Please try again.</p>
+                </div>
+            </div>
+
+            <div class="popular-words">
+                <h3>Try these popular words:</h3>
+                <div class="word-chips">
+                    <span class="word-chip" data-word="hello">Hello</span>
+                    <span class="word-chip" data-word="water">Water</span>
+                    <span class="word-chip" data-word="food">Food</span>
+                    <span class="word-chip" data-word="family">Family</span>
+                    <span class="word-chip" data-word="friend">Friend</span>
+                    <span class="word-chip" data-word="house">House</span>
+                    <span class="word-chip" data-word="school">School</span>
+                    <span class="word-chip" data-word="beautiful">Beautiful</span>
+                    <span class="word-chip" data-word="love">Love</span>
+                    <span class="word-chip" data-word="mother">Mother</span>
+                    <span class="word-chip" data-word="father">Father</span>
+                    <span class="word-chip" data-word="good">Good</span>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h3>Translation History</h3>
+                <div id="historyList" class="history-list">
+                    <p class="no-history">No translations yet. Start translating!</p>
+                </div>
+                <button id="clearHistoryBtn" class="clear-btn" style="display: none;">Clear History</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Made with ❤️ for language learners | Uses MyMemory & LibreTranslate APIs</p>
+            <p class="version">Version 2.1 | Updated: 2025-06-15 22:07:23 UTC | By @inyogeshwar</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
